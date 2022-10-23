@@ -11,6 +11,7 @@ He‘s Linux Like Operating System
 
 开发日志：  
 2022-10-22 立项  
+2022-10-23 [配置bochs开发环境](./docs/2022-10-23-bochs.md)  [探索启动时的实模式](./docs/2022-10-23-real_mode.md)
 
 
 设计架构：
