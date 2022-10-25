@@ -14,14 +14,15 @@ load_setup:
 	xor	dx, dx
     mov dl, 0x80
 	mov	cx, 0x0002
-	mov	bx, 0x0200
-	mov	ax, 0x0204
+	mov	bx, 0x1000
+	mov	ax, 0x0200 + 0x4
 	int	0x13
 	jnc	ok_load_setup
     jmp load_setup
 
 ok_load_setup:
 
+	jmp 0x1000
 jmp $
 
 message DB "hello"
