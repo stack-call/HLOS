@@ -12,9 +12,10 @@ He‘s Linux Like Operating System
 
 开发日志：  
 2022-10-22 立项  
-2022-10-23 [配置bochs开发环境](./docs/2022-10-23-bochs.md)  [探索启动时的实模式](./docs/2022-10-23-real_mode.md)
-2022-10-23 [加载操作系统内核](docs/2022-10-24-load_kernel.md)
-2022-10-25 [加载操作系统内核](docs/2022-10-24-load_kernel.md)
+2022-10-23 [配置bochs开发环境](./docs/2022-10-23-bochs.md)  [探索启动时的实模式](./docs/2022-10-23-real_mode.md)  
+2022-10-23 [加载操作系统内核](docs/2022-10-24-load_kernel.md)  
+2022-10-25 [加载操作系统内核](docs/2022-10-24-load_kernel.md)  
+2022-10-26 [加载操作系统内核](docs/2022-10-24-load_kernel.md) PS:加载内核比想象中的困难
 
 一些问题:
 * git不能传输大文件，因此hd60M.img文件不能传输，因此需要在Makefile命令中使用命令创建并在运行结束后删除(或者在git时删除)

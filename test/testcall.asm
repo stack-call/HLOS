@@ -1,4 +1,4 @@
-SECTION code16 vstart=0x7c00;(也可以是ORG 0x7c00)
+
 
 ;此时cs = 0, ip = 0x7c00
 ;把所有的段寄存器全部修改为0x0，则只需要关注偏移
@@ -8,6 +8,8 @@ mov ss, ax
 mov fs, ax
 mov es, ax
 mov sp, 0x7c00
+
+jmp 0x07c0:load_setup
 
 ;接下来是系统调用测试
 load_setup:
@@ -22,7 +24,7 @@ load_setup:
 
 ok_load_setup:
 
-	jmp 0x1000
+	jmp 0:0x1000
 jmp $
 
 message DB "hello"

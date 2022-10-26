@@ -1,11 +1,17 @@
 all:
-test:
+testcall:
 	cp ../tools/hd60M.img ./
-	nasm test.asm -f bin -o test.bin
-	nasm test1.asm -f bin -o test1.bin
-	dd if=test.bin of=hd60M.img bs=512 count=1 conv=notrunc
-	dd if=test1.bin of=hd60M.img bs=512 count=1 seek=1 conv=notrunc
-	
+	nasm testcall.asm -f bin -o testcall.bin
+	nasm testcall1.asm -f bin -o testcall1.bin
+	dd if=testcall.bin of=hd60M.img bs=512 count=1 conv=notrunc
+	dd if=testcall1.bin of=hd60M.img bs=512 count=1 seek=1 conv=notrunc
+
+testhard:
+	cp ../tools/hd60M.img ./
+	nasm testhard.asm -f bin -o testhard.bin
+	nasm testhard1.asm -f bin -o testhard1.bin
+	dd if=testhard.bin of=hd60M.img bs=512 count=1 conv=notrunc
+	dd if=testhard1.bin of=hd60M.img bs=512 count=1 seek=1 conv=notrunc
 bochs:
 	bochs -f ../HLOS_bochsrc
-	rm hd60M.img test.bin test1.bin
+	rm hd60M.img *.bin
