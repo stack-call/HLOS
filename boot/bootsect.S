@@ -39,30 +39,26 @@ go:
 # dh = 磁头号；				dl = 驱动器号（如果是硬盘则位7要置位）；
 # es:bx 指向数据缓冲区;	如果出错则CF标志置位,ah中是出错码.
 load_setup:
-	xorw	%dx, %dx						# drive 0, head 0
-	movw $0x0002, %cx					# sector 2, track 0
-	movw $0x0200, %bx					# address = 512, in INITSEG
-	movw $0x0200 + SETUPLEN, %ax		# service 2, nr of sectors
-	int	$0x13						# read it
+	xorw	%dx, %dx			# drive 0, head 0
+	movw  $0x0002, %cx		# sector 2, track 0
+      movb  $0x80, %dl
+	movw  $0x0200, %bx		# address = 512, in INITSEG
+	movw  $0x0200 + 4, %ax		# service 2, nr of sectors
+	int   $0x13			      # read it
 
 	jnc ok_load_setup
 
-	pushw	%ax			# dump error code
-	call	print_nl
-	movw	%sp, %bp
-	call	print_hex
-	popw	%ax
 	jmp	load_setup
 
 ok_load_setup:
-
+      ljmp $INITSEG,$0x200
 
 # 因为实模式的段最多16bit，即64K大小，因此需要不断判断是否大于64k
 # 需要像Linux中的那样不断判断还需要读取多少
 # 如果进入保护模式再读取又可能损坏了某些信息
 # 但是在保护模式读取会很简单
 # 因此直接读取硬盘寄存器来读取AT硬盘的扇区(xv6使用的方式,修改自真相还原)
-
+#以下代码仅为备用，在内核加载中不使用
 # -------------------------------------------------------------------------------
 # 功能:读取硬盘n个扇区
 # rd_disk_m_16:	   
@@ -129,3 +125,6 @@ ok_load_setup:
       add $2, %bx		  
       loop .go_on_read
       ret
+
+.org 510
+.byte 0x55, 0xaa
