@@ -1,8 +1,31 @@
+CCCOLOR="\033[34m"
+LINKCOLOR="\033[34;1m"
+SRCCOLOR="\033[33m"
+BINCOLOR="\033[37;1m"
+MAKECOLOR="\033[32;1m"
+ENDCOLOR="\033[0m"
+NONE   =    \033[0m               # 默认显示
+RED     =    "\033[0;42;31m"         # 绿红色
+GREEN   =    \033[0;32m         	# 绿色
+BLUE   =   "\033[0;32;34m"         # 蓝色
+DARK_GRAY =  "\033[1;30m"            # 灰色
+CYAN    =    "\033[0;36m"            # 青色
+PURPLE   =   "\033[0;35m"            # 紫色
+BROWN    =   "\033[0;33m"            # 棕色
+YELLOW   =   "\033[5;42;33m"         # 绿黄色
+WHITE    =   "\033[1;37m"            # 白色
+
 CC = gcc
 AS = gas
 LD = ld
 
-CFLAGS = -c -m32 -I include/ -fno-builtin -nostdinc -Og #-O, -O1 after testing, the -Og generate the smallest code size with 422 bytes
+CFLAGS = -c -m32 -fno-builtin -nostdinc -Og 
+#-O, -O1 after testing, the -Og generate the smallest code size with 422 bytes
+#CFLAGS  = -g -m32 -fomit-frame-pointer -fstrength-reduce #-Wall
+#CFLAGS  = -g -m32 -finline-functions -fomit-frame-pointer -fstrength-reduce -fno-stack-protector -fno-builtin-memset -fno-builtin-memcpy #-Wall
+#CFLAGS  = -g -m32    -fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin 
+#CFLAGS	=-O0 -g3 -gdwarf-2 -m32 -fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin #-Wall
+
 LDFLAGS = -m elf_i386
 
 OBJDUMP = objdump

@@ -50,8 +50,9 @@ load_setup:
 
 	jmp	load_setup
 
+#注意下面读取的扇区大小!!!!!!!!!
 ok_load_setup:
-
+/*
       mov $SYSSEG, %ax
       mov %ax, %es
 	xorw	%dx, %dx			# drive 0, head 0
@@ -60,18 +61,18 @@ ok_load_setup:
 	movw  $0x0, %bx		# address = 512, in INITSEG
 	movw  $0x0200 + 1, %ax		# service 2, nr of sectors
 	int   $0x13	
-
+*/
 #为了与使用中断读取保持一致，读取到SYSSEG段
-/*
+
       mov $SYSSEG, %ax
       mov %ax, %es
       mov %ax, %ds
       mov $0x5, %eax
       mov $0x0, %bx
-      mov $1, %cx  #先用1测试
+      mov $128, %cx  #先用1测试
       call rd_disk_m_16
 
-*/
+
       ljmp $INITSEG,$0x200
 
 # 因为实模式的段最多16bit，即64K大小，因此需要不断判断是否大于64k
