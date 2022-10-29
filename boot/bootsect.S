@@ -61,6 +61,7 @@ ok_load_setup:
 	movw  $0x0200 + 1, %ax		# service 2, nr of sectors
 	int   $0x13	
 
+#为了与使用中断读取保持一致，读取到SYSSEG段
 /*
       mov $SYSSEG, %ax
       mov %ax, %es
@@ -84,7 +85,7 @@ ok_load_setup:
 rd_disk_m_16:	   
 #-------------------------------------------------------------------------------
 				       # eax=LBA扇区号
-				       # (e)bx=将数据写入的内存地址
+				       # es:(e)bx=将数据写入的内存地址(可以修改代码)
 				       # (e)cx=读入的扇区数
       movl %eax, %esi	  #备份eax
       movw %cx, %di		  #备份cx

@@ -8,5 +8,11 @@ LDFLAGS = -m elf_i386
 OBJDUMP = objdump
 OBJCOPY = objcopy
 
+STRIP = strip
+
+OBJCOPYFLAGS = -S -O binary -R .note -R .comment -j .text
+#有多余，可以去https://sourceware.org/binutils/docs-2.39/binutils.html#objcopy看一下
+
+
 #BOOTLDFLAGS = $(LDFLAGS) -N -e start -Ttext 0x0#0x7C00
 #KERNELLDFLAGS = $(LDFLAGS) -T kernel.ld
