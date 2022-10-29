@@ -51,6 +51,26 @@ load_setup:
 	jmp	load_setup
 
 ok_load_setup:
+
+      mov $SYSSEG, %ax
+      mov %ax, %es
+	xorw	%dx, %dx			# drive 0, head 0
+	movw  $0x0006, %cx		# sector 2, track 0
+      movb  $0x80, %dl
+	movw  $0x0, %bx		# address = 512, in INITSEG
+	movw  $0x0200 + 1, %ax		# service 2, nr of sectors
+	int   $0x13	
+
+/*
+      mov $SYSSEG, %ax
+      mov %ax, %es
+      mov %ax, %ds
+      mov $0x5, %eax
+      mov $0x0, %bx
+      mov $1, %cx  #先用1测试
+      call rd_disk_m_16
+
+*/
       ljmp $INITSEG,$0x200
 
 # 因为实模式的段最多16bit，即64K大小，因此需要不断判断是否大于64k
@@ -58,14 +78,14 @@ ok_load_setup:
 # 如果进入保护模式再读取又可能损坏了某些信息
 # 但是在保护模式读取会很简单
 # 因此直接读取硬盘寄存器来读取AT硬盘的扇区(xv6使用的方式,修改自真相还原)
-#以下代码仅为备用，在内核加载中不使用
+#以下代码使用LBA而不是CHS
 # -------------------------------------------------------------------------------
 # 功能:读取硬盘n个扇区
-# rd_disk_m_16:	   
+rd_disk_m_16:	   
 #-------------------------------------------------------------------------------
 				       # eax=LBA扇区号
-				       # ebx=将数据写入的内存地址
-				       # ecx=读入的扇区数
+				       # (e)bx=将数据写入的内存地址
+				       # (e)cx=读入的扇区数
       movl %eax, %esi	  #备份eax
       movw %cx, %di		  #备份cx
 #读写硬盘:
@@ -121,7 +141,7 @@ ok_load_setup:
       mov $0x1f0, %dx
   .go_on_read:
       in %dx, %ax
-      mov %ax, (bx)
+      mov %ax, %es:(%bx)
       add $2, %bx		  
       loop .go_on_read
       ret

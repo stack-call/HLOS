@@ -5,7 +5,43 @@
 
 .global _start
 _start:
+# now we want to move to protected mode ...
+# 现在我们要进入保护模式中了...
 
+	cli											# no interrupts allowed !	! 从此开始不允许中断.
+
+	# first we move the system to it's rightful place
+	# 首先我们将system模块移到正确的位置.
+	# bootsect引导程序会把system模块读入到内存0x10000(64KB)开始的位置.由于当时假设system模块最大长度不会超过0x80000(512KB),即其
+	# 末端不会超过内存地址0x90000,所以bootsect会把自己移动到0x90000开始的地方,并把setup加载到它的后面.下面这段程序的用途是把整个
+	# system模块移动到0x00000位置,即把从0x10000到0x8ffff的内存数据块(512KB)整块地向内存低端移动了0x10000(64KB)的位置.
+
+	mov	$0x0, %ax
+	cld				# 'direction'=0, movs moves forward
+do_move:
+	mov	%ax, %es		# destination segment	# es:di是目的地址(初始为0x0:0x0)
+	add	$0x1000, %ax
+	cmp	$0x9000, %ax		# 已经把最后一段(从0x8000段开始的64KB)代码移动完.
+	jz	end_move		# 是,则跳转.
+	mov	%ax, %ds		# source segment	! ds:si是源地址(初始为0x1000:0x0)
+	sub	%di, %di
+	sub	%si, %si
+	mov $0x8000, %cx		# 移动0x8000字(64KB).
+	rep
+	movsw
+	jmp	do_move
+
+	# then we load the segment descriptors
+	# 此后,我们加载段描述符.
+	#
+	# 下面指令lidt用于加载中断描述符表(IDT)寄存器.它的操作数(idt_48)有6个字节.前2个字节(字节0-1)是描述符表的字节长度值;后4字节(字节2-5)是描述符表
+	# 的32位线性基地址.中断描述符表中的每一个8字节表项指出发生中断时需要调用的代码信息.与中断向量有些相似,但要包含更多的信息.
+	#
+	# lgdt指令用于加载全局描述符表(GDT)寄存器,其操作数格式与lidt指令的相同.全局描述符表中的每个符项(8字节)描述了保护模式下数据段和代码段(块)的信息.其
+	# 中包括段的最大长限制(16位),段的线性地址基址(32位)/段的特权级,段是否在内存,读写许可权以及其他一些保护模式运行的标志.
+end_move:
+
+      //ljmp $0x0, $0x0
     #开启A20
     in $0x92, %al
     or $0x2, %al
@@ -21,20 +57,8 @@ _start:
     or $0x00000001, %eax
     mov %eax, %cr0
 
-    ljmp $0x8,$90200
-.code32
+    ljmp $0x8, $0x0
 
-start32:
-    mov $0x10, %ax
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %ss
-    mov $0x90000, %esp
-    mov $0x18, %ax
-    mov %ax, %gs
-    mov %ax, %fs
-loop:
-    jmp loop
 
 
 # -------------------------------------------------------------------------------

@@ -1,0 +1,12 @@
+CC = gcc
+AS = gas
+LD = ld
+
+CFLAGS = -c -m32 -I include/ -fno-builtin -nostdinc -Og #-O, -O1 after testing, the -Og generate the smallest code size with 422 bytes
+LDFLAGS = -m elf_i386
+
+OBJDUMP = objdump
+OBJCOPY = objcopy
+
+#BOOTLDFLAGS = $(LDFLAGS) -N -e start -Ttext 0x0#0x7C00
+#KERNELLDFLAGS = $(LDFLAGS) -T kernel.ld
