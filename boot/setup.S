@@ -53,6 +53,46 @@ end_move:
 
     lidt idt_48
     lgdt gdt_48
+
+# .word	0x00eb,0x00eb是直接使用机器码表示的两条相对跳转指令,起延时作用.0xeb是直接近跳转指令的操作码,带1个字节的相对位移值.因此跳转范围是
+# -127--127.CPU通过把这个相对位移值加到EIP寄存器中就形成一个新的有效地址.此时EIP指向下一条被执行的指令.执行时所花费的CPU时钟周期数是7至10
+# 个.0x00eb表示跳转值是0的一条指令,因此还是直接执行下一条指令.这两条指令共可提供14--20个CPU时钟周期的延迟时间.在as86上没有表示相应指令的助
+# 记符,因此Linus在setup.s等一些汇编程序中就直接使用机器码来表示这种指令.另外,每个空操作指令NOP的时钟周期数是3个,因此若要达到相同的延迟效果
+# 就需要6~7个NOP指令.
+
+# 8259芯片主片端口是0x20-0x21,从片端口是0xA0-0xA1.输出值0x11表示初始化命令开始,它是ICW1命令字,表示边沿触发,多片8269级连,最后要发送ICW4
+# 命令字.
+
+	mov	$0x11, %al							# initialization sequence
+	out	%al, $0x20								# send it to 8259A-1	! 发送到8259A主芯片.
+	.word	0x00eb, 0x00eb						# jmp $+2, jmp $+2	! '$'表示当前指令的地址.
+	out	%al, $0xA0							# and to 8259A-2	! 再发送到8259A从芯片.
+	.word	0x00eb, 0x00eb
+	# Linux系统硬件中断号被设置成从0x20开始.
+	mov	$0x20, %al							# start of hardware int's (0x20)
+	out	%al, $0x21							# 送主芯片ICW2命令字,设置起始中断号,要送奇端口.
+	.word	0x00eb, 0x00eb
+	mov	$0x28, %al							# start of hardware int's 2 (0x28)
+	out	%al, $0xA1 							# 送从芯片ICW2命令字,从芯片的起始中断号.
+	.word	0x00eb, 0x00eb
+
+	mov	$0x04, %al								# 8259-1 is master
+	out	%al, $0x21								# 送主芯片ICW3命令字,主芯片的IR2连从芯片INT.
+	.word	0x00eb, 0x00eb
+	mov	$0x02, %al							# 8259-2 is slave
+	out	%al, $0xA1							# 送从芯片ICW3命令字,主芯片的IR2连从芯片的INT连到主芯片的IR2引脚上.
+
+	.word	0x00eb, 0x00eb
+	mov	$0x01, %al							# 8086 mode for both
+	out	%al,$0x21							# 送主芯片ICW4命令字.8086模式;普通EOI,非缓冲方式,需发送指令来.初始化结束,芯片就绪.
+	.word	0x00eb, 0x00eb
+	out	%al, $0xA1								# 送从芯片ICW4命令字,内容同上.
+	.word	0x00eb, 0x00eb
+	mov	$0xFF, %al								# mask off all interrupts for now
+	out	%al, $0x21								# 屏蔽主芯片所有中断请求.
+	.word	0x00eb, 0x00eb
+	out	%al, $0xA1								# 屏蔽从芯片所有中断请求.
+
     mov %cr0, %eax
     or $0x00000001, %eax
     mov %eax, %cr0
