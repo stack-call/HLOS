@@ -6,9 +6,14 @@ all: Image
 
 Image: boot/bootsect boot/setup tools/system init/main.o
 	cp ./tools/hd60M.img ./
+
 	dd if=boot/bootsect of=hd60M.img bs=512 count=1 seek=0 conv=notrunc
 	dd if=boot/setup of=hd60M.img bs=512 count=4 seek=1 conv=notrunc
 	dd if=tools/system of=hd60M.img bs=512 count=128 seek=5 conv=notrunc
+#	$(CC) -c -m32 -fno-builtin -nostdinc -Og  -I ./include ./test/test64k.S -o test64k.o
+#	$(LD) -m elf_i386 test64k.o -e 0x0 -o test64k.bin
+#	$(OBJCOPY) $(OBJCOPYFLAGS) test64k.bin  test64k
+#	dd if=tools/system of=hd60M.img bs=512 count=2 seek=140 skip=0 conv=notrunc
 #注意写入的大小与编译结果大小和引导程序读取的统一!!!!!!!!!
 
 
@@ -34,7 +39,7 @@ kernel/sched.o: ./kernel/sched.c
 
 clean:
 	make clean -C boot
-	rm ./tools/system kernel/sched.o system.tmp init/main.o hd60M.img
+	rm ./tools/system kernel/sched.o system.tmp init/main.o hd60M.img test64k.bin test64k.o test64k
 
 bochs:
 	bochs -f HLOS_bochsrc

@@ -53,6 +53,9 @@ check_A20:
 	jmp after_page_tables
 
 
+
+
+
 	jmp .
 
 setup_gdt:
@@ -144,6 +147,31 @@ setup_paging:							# 首先对5页内存(1页目录+4页页表)清零.
 	movl %cr0, %eax
 	orl $0x80000000, %eax				# 添上PG标志.
 	movl %eax, %cr0						/* set paging (PG) bit */
+
+/*
+//以下为测试
+	mov $138, %eax
+	mov $100, %ecx
+	mov $0x10000, %ebx
+
+	//下四行测试是否是刚好读取到0x10000处
+	mov $0x10000, %eax
+	movb $0x66, (%eax)
+	mov $0xffff, %eax
+	movb $0x55, (%eax)
+
+	call rd_disk_m_32
+
+	//mov $0x10000, %eax
+	//mov $0x66, (%eax)
+	//以上两行用来测试是否可以正确访问0x10000处的内存(可以)
+	//当把两行代码写在rd_disk_m_32调用前可以测试读磁盘是否工作
+
+	ljmp $0x08,$0x10000
+//以上为测试
+没有测试成功，似乎是dd没有写进去东西，读扇区功能是正常的,但是读出来的内容全是0
+dd目标扇区的周围也没有东西，换了输入文件还是没有写进去东西。
+*/
 	ret									/* this also flushes prefetch-queue */
 
 # 在改变分页处理标志后要求使用转移指令刷新预取指令队列, 这里用的是返回指令ret.
@@ -168,3 +196,70 @@ gdt:
 	.quad 0x00c0920000000fff			/* 16Mb */		# 0x10,内核数据段最大长度16MB.
 	.quad 0x0000000000000000			/* TEMPORARY - don't use */
 	.fill 252, 8, 0						/* space for LDT's and TSS's etc */	# 预留空间.
+
+# -------------------------------------------------------------------------------
+# 功能:读取硬盘n个扇区
+rd_disk_m_32:	   
+#-------------------------------------------------------------------------------
+				       # eax=LBA扇区号
+				       # ds:ebx=将数据写入的内存地址(可以修改)
+				       # ecx=读入的扇区数
+      movl %eax, %esi	  #备份eax
+      movw %cx, %di		  #备份cx
+#读写硬盘:
+#第1步：设置要读取的扇区数
+      movw $0x1f2, %dx
+      mov %cl, %al
+      out %al, %dx            #读取的扇区数
+      movl %esi, %eax	   #恢复ax
+
+#第2步：将LBA地址存入0x1f3 ~ 0x1f6
+
+      #LBA地址7~0位写入端口0x1f3
+      movw $0x1f3, %dx                       
+      out %al, %dx                        
+
+      #LBA地址15~8位写入端口0x1f4
+      movb $8, %cl
+      shr %cl, %eax
+      movw $0x1f4, %dx
+      out %al, %dx
+
+      #LBA地址23~16位写入端口0x1f5
+      shr %cl, %eax
+      movw $0x1f5, %dx
+      out %al, %dx
+
+      shr %cl, %eax
+      and $0x0f, %al	   #lba第24~27位
+      or $0xe0, %al	   # 设置7～4位为1110,表示lba模式
+      mov $0x1f6, %dx
+      out %al, %dx
+
+#第3步：向0x1f7端口写入读命令，0x20 
+      mov $0x1f7, %dx
+      mov $0x20, %al                        
+      out %al, %dx
+
+#第4步：检测硬盘状态
+  .not_ready:
+      #同一端口，写时表示写入命令字，读时表示读入硬盘状态
+      nop
+      in %dx, %al
+      and $0x88, %al	   #第4位为1表示硬盘控制器已准备好数据传输，第7位为1表示硬盘忙
+      cmp $0x08, %al
+      jnz .not_ready	   #若未准备好，继续等。
+
+#第5步：从0x1f0端口读数据
+      mov %di, %ax
+      mov $256, %dx
+      mul %dx
+      mov %ax, %cx	   # di为要读取的扇区数，一个扇区有512字节，每次读入一个字，
+			   # 共需di*512/2次，所以di*256
+      mov $0x1f0, %dx
+  .go_on_read:
+      in %dx, %ax
+      mov %ax, (%ebx) #与16位程序只有这里不同
+      add $2, %ebx		  
+      loop .go_on_read
+      ret
