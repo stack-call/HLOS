@@ -1,3 +1,3 @@
 .text
-.org 0x10000
+.org 0x70000
 jmp .

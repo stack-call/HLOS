@@ -69,9 +69,19 @@ ok_load_setup:
       mov %ax, %ds
       mov $0x5, %eax
       mov $0x0, %bx
-      mov $128, %cx  #先用1测试
+      mov $128, %cx  #先用1测试，最多应该是128?
       call rd_disk_m_16
-
+/*
+      mov $SYSSEG, %ax
+      add $0x10, %ah
+      mov %ax, %es
+      mov %ax, %ds
+      mov $0x132, %eax
+      mov $0x0, %bx
+      mov $128, %cx  #先用1测试，最多应该是128?
+      call rd_disk_m_16
+//用来测试
+*/
 
       ljmp $INITSEG,$0x200
 

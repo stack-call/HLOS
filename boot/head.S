@@ -1,6 +1,7 @@
 
     //jmp .
 .text
+
 .globl idt,gdt,pg_dir
 pg_dir:# 页目录将会存放在这里.
 
@@ -39,6 +40,7 @@ startup_32:
 	mov 0x45, %bh
 	mov %bx, (%eax)
 
+
 check_A20:
 	xorl %eax, %eax
 1:	incl %eax							# check that A20 really IS enabled
@@ -49,6 +51,7 @@ check_A20:
 	movl %eax, 0x000000					# loop forever if it isn't
 	cmpl %eax, 0x100000
 	je 1b
+
 
 	jmp after_page_tables
 
@@ -148,30 +151,39 @@ setup_paging:							# 首先对5页内存(1页目录+4页页表)清零.
 	orl $0x80000000, %eax				# 添上PG标志.
 	movl %eax, %cr0						/* set paging (PG) bit */
 
+	lgdt gdt_descr
+	ljmp $0x08, $page_ok
+page_ok:
+
 /*
 //以下为测试
-	mov $138, %eax
-	mov $100, %ecx
-	mov $0x10000, %ebx
+	
 
-	//下四行测试是否是刚好读取到0x10000处
-	mov $0x10000, %eax
+	//下四行测试是否是刚好读取到0x70000处
+	mov $0x70000, %eax
 	movb $0x66, (%eax)
-	mov $0xffff, %eax
+	mov $0x6ffff, %eax
 	movb $0x55, (%eax)
-
+	
+	mov $1, %eax
+	mov $5, %ecx
+	mov $0x70000, %ebx
+	//如果读取这几个扇区可以读取，但是读取原来的140扇区,128个读取不了,全是0
+	//可以配合bochs xp看读取是否出错（0x55, 0x66)
 	call rd_disk_m_32
+
 
 	//mov $0x10000, %eax
 	//mov $0x66, (%eax)
 	//以上两行用来测试是否可以正确访问0x10000处的内存(可以)
 	//当把两行代码写在rd_disk_m_32调用前可以测试读磁盘是否工作
 
-	ljmp $0x08,$0x10000
+	//ljmp $0x08,$0x70000
 //以上为测试
-没有测试成功，似乎是dd没有写进去东西，读扇区功能是正常的,但是读出来的内容全是0
-dd目标扇区的周围也没有东西，换了输入文件还是没有写进去东西。
+//没有测试成功，似乎是dd没有写进去东西，读扇区功能是正常的,但是读出来的内容全是0
+//dd目标扇区的周围也没有东西，换了输入文件还是没有写进去东西。
 */
+
 	ret									/* this also flushes prefetch-queue */
 
 # 在改变分页处理标志后要求使用转移指令刷新预取指令队列, 这里用的是返回指令ret.
@@ -259,7 +271,7 @@ rd_disk_m_32:
       mov $0x1f0, %dx
   .go_on_read:
       in %dx, %ax
-      mov %ax, (%ebx) #与16位程序只有这里不同
+      mov %ax, %ds:(%ebx) #与16位程序只有这里不同
       add $2, %ebx		  
       loop .go_on_read
       ret
